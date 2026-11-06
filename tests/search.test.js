@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CATEGORIES, FILES } from "../data.js";
-import { search, formatHeading } from "../search.js";
+import { search, formatHeading, buildReply, reportToText } from "../search.js";
 
 const MAIN = "Can you find me the gold mining report from 2015 to 2017?";
 const names = (q) => search(q, FILES).files.map((f) => f.name);
@@ -103,6 +103,96 @@ test("small words like 'at' do not match file text", () => {
   const { files } = search("tailings at Mirren Flats", FILES);
   assert.ok(files.length > 0);
   assert.ok(files.every((f) => f.site === "Mirren Flats" && f.category === "Tailings Engineering"));
+});
+
+test("a search reply says what was found and where it came from", () => {
+  const { intro } = buildReply(search("Show me the files from Harlow Ridge", FILES));
+  assert.match(intro, /^We found 11 relevant files\. Here are the files from Harlow Ridge, covering /);
+});
+
+test("the reply summary has the top three files' passages, numbered as sources", () => {
+  const result = search("Show me the files from Harlow Ridge", FILES);
+  const { points } = buildReply(result);
+  assert.deepEqual(points, result.files.slice(0, 3).map((f, i) => ({ text: f.passage, source: i + 1 })));
+});
+
+test("a client question's reply leads with its written answer", () => {
+  const result = search(CLIENT, FILES);
+  const { intro, points } = buildReply(result);
+  assert.equal(intro, result.answer);
+  assert.deepEqual(points, [{ text: result.files[0].passage, source: 1 }]);
+});
+
+test("a reply about one file uses singular wording", () => {
+  const { intro } = buildReply(search("tailings at Mirren Flats", FILES));
+  assert.match(intro, /^We found 1 relevant file\. Here is the file from Mirren Flats, covering /);
+});
+
+test("a reply about all years still reads naturally", () => {
+  const { intro } = buildReply(search("Find the tailings engineering reports", FILES));
+  assert.equal(intro, "We found 6 relevant files. Here are the files covering Tailings Engineering.");
+});
+
+test("no matches give no reply", () => {
+  assert.equal(buildReply(search("What's the weather today?", FILES)), null);
+});
+
+test("asking for an old file by year returns that year's files", () => {
+  assert.equal(
+    search("Can you send the old file from 2017?", FILES).files.length,
+    FILES.filter((f) => f.year === 2017).length,
+  );
+});
+
+const REPORT = "Can you write a report of the findings on haul trucks?";
+
+test("a report request gives a draft report with a finding per file", () => {
+  const result = search(REPORT, FILES);
+  const { intro, report } = buildReply(result);
+  assert.equal(result.files.length, 6);
+  assert.equal(intro, "Here is a draft report based on 6 relevant files.");
+  assert.equal(report.title, "Findings Report: Haul Trucks");
+  assert.equal(report.scope, "6 files from 2014 to 2020");
+  assert.deepEqual(report.findings, result.files.map((f, i) => ({ text: f.passage, source: i + 1 })));
+});
+
+test("a report can be limited by company and years", () => {
+  const result = search("Write a report of the findings on gold at Harlow Ridge from 2015 to 2017", FILES);
+  const { report } = buildReply(result);
+  assert.ok(result.files.every((f) => f.site === "Harlow Ridge" && f.commodity === "gold" && f.year >= 2015 && f.year <= 2017));
+  assert.equal(report.title, "Findings Report: Gold, Harlow Ridge, 2015 to 2017");
+  assert.match(report.scope, /for Harlow Ridge$/);
+});
+
+test("a report about one file uses singular wording", () => {
+  const { intro, report } = buildReply(search("Write a report on tailings at Mirren Flats", FILES));
+  assert.equal(intro, "Here is a draft report based on 1 relevant file.");
+  assert.equal(report.scope, "1 file from 2016 for Mirren Flats");
+});
+
+test("finding a report is not a report request", () => {
+  assert.equal(buildReply(search(MAIN, FILES)).report, undefined);
+});
+
+test("a report request with no topic returns nothing", () => {
+  assert.equal(buildReply(search("Can you write a report?", FILES)), null);
+});
+
+test("a report request about a prepared question still gives a report", () => {
+  const question = "Write a report on which haul truck fleet can meet the target at Tarn Basin";
+  assert.ok(buildReply(search(question, FILES)).report);
+});
+
+test("copied report text has the title, findings, sources and draft note", () => {
+  const result = search(REPORT, FILES);
+  const text = reportToText(buildReply(result).report, result.files);
+  assert.match(text, /^Findings Report: Haul Trucks\n/);
+  assert.match(text, /Scope: 6 files from 2014 to 2020/);
+  result.files.forEach((f, i) => {
+    assert.ok(text.includes(`- ${f.passage} [${i + 1}]`), f.name);
+    assert.ok(text.includes(`${i + 1}. ${f.name}`), f.name);
+  });
+  assert.match(text, /Draft: check against the source files before sending to a client\./);
 });
 
 test("each example question returns at least one file", () => {

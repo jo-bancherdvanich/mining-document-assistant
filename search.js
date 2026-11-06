@@ -4,18 +4,19 @@ import { PREPARED_ANSWERS } from "./data.js";
 
 const normalize = (word) => word.replace(/s$/, "");
 
-const toWords = (text) =>
+const rawWords = (text) =>
   text
-    .toLowerCase()
     .replace(/['’]/g, "")
-    .split(/[^a-z0-9]+/)
-    .filter(Boolean)
-    .map(normalize);
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean);
+
+const toWords = (text) => rawWords(text.toLowerCase()).map(normalize);
 
 const IGNORED_WORDS = new Set(
   toWords(
     "a about all an and any are as at between by can could do does exist find for from get give has have i in is it looking me my need of on our please show that the there this to us want was we were what whats which with would written you " +
-      "report reports file files study studies mining mine engineering company",
+      "report reports file files study studies mining mine engineering company " +
+      "create draft finding findings make old send write writing",
   ),
 );
 
@@ -61,18 +62,16 @@ function topCategories(files) {
 
 function buildSummary(files, years, company) {
   if (files.length === 0) return "";
-  const subject = files.length === 1 ? "This file" : "These files";
-  const verb = files.length === 1 ? "is" : "are";
-  const cover = files.length === 1 ? "covers" : "cover";
+  const opener = files.length === 1 ? "Here is the file" : "Here are the files";
   const categories = joinList(topCategories(files));
   const range = years && (years.from === years.to ? `${years.from}` : `${years.from} to ${years.to}`);
 
   let origin = "";
-  if (company && range) origin = `${verb} from ${company}, dated ${range}, and `;
-  else if (company) origin = `${verb} from ${company} and `;
-  else if (range) origin = `${verb} from ${range} and `;
+  if (company && range) origin = ` from ${company}, dated ${range},`;
+  else if (company) origin = ` from ${company},`;
+  else if (range) origin = ` from ${range},`;
 
-  return `${subject} ${origin}${cover} ${categories}.`;
+  return `${opener}${origin} covering ${categories}.`;
 }
 
 // A company is recognized by the first word of its name, such as "Harlow" for Harlow Ridge.
@@ -92,8 +91,34 @@ function findPreparedAnswer(question, files) {
   return null;
 }
 
+function isReportRequest(question) {
+  const words = new Set(toWords(question));
+  return words.has("write") && words.has("report");
+}
+
+function formatRange(years) {
+  return years.from === years.to ? `${years.from}` : `${years.from} to ${years.to}`;
+}
+
+function buildReportDetails(question, files, topics, years, company) {
+  const topicText = [...new Set(rawWords(question).filter((word) => topics.includes(normalize(word.toLowerCase()))))]
+    .map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+  const titleParts = [topicText, company, years && formatRange(years)].filter(Boolean);
+
+  const fileYears = files.map((file) => file.year);
+  const span = formatRange({ from: Math.min(...fileYears), to: Math.max(...fileYears) });
+  const count = `${files.length} ${files.length === 1 ? "file" : "files"}`;
+
+  return {
+    title: `Findings Report: ${titleParts.join(", ")}`,
+    scope: `${count} from ${span}${company ? ` for ${company}` : ""}`,
+  };
+}
+
 export function search(question, files) {
-  const prepared = findPreparedAnswer(question, files);
+  const wantsReport = isReportRequest(question);
+  const prepared = wantsReport ? null : findPreparedAnswer(question, files);
   if (prepared) return prepared;
 
   const years = parseYears(question);
@@ -119,9 +144,53 @@ export function search(question, files) {
     )
     .map(({ file }) => file);
 
-  return { files: matches, summary: buildSummary(matches, years, company) };
+  const result = { files: matches, summary: buildSummary(matches, years, company) };
+  if (wantsReport && matches.length > 0) {
+    result.report = buildReportDetails(question, matches, topics, years, company);
+  }
+  return result;
 }
 
 export function formatHeading(count) {
   return `We found ${count} relevant ${count === 1 ? "file" : "files"}`;
+}
+
+const SUMMARY_POINTS = 3;
+const DRAFT_NOTE = "Draft: check against the source files before sending to a client.";
+
+const numberedPassages = (files) =>
+  files.map((file, index) => ({ text: file.passage, source: index + 1 }));
+
+// Shapes a search result into the simulated AI reply. Summary points and report
+// findings are the files' passages, so they always match the sources shown.
+export function buildReply({ answer, files, summary, report }) {
+  if (files.length === 0) return null;
+  if (report) {
+    const count = `${files.length} relevant ${files.length === 1 ? "file" : "files"}`;
+    return {
+      intro: `Here is a draft report based on ${count}.`,
+      points: [],
+      report: { ...report, findings: numberedPassages(files), note: DRAFT_NOTE },
+    };
+  }
+  return {
+    intro: answer ?? `${formatHeading(files.length)}. ${summary}`,
+    points: numberedPassages(files.slice(0, SUMMARY_POINTS)),
+  };
+}
+
+export function reportToText(report, files) {
+  return [
+    report.title,
+    "",
+    `Scope: ${report.scope}`,
+    "",
+    "Key findings",
+    ...report.findings.map(({ text, source }) => `- ${text} [${source}]`),
+    "",
+    "Sources",
+    ...files.map((file, index) => `${index + 1}. ${file.name}`),
+    "",
+    report.note,
+  ].join("\n");
 }

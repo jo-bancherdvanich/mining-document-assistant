@@ -60,7 +60,7 @@ export const FILES = [
   file("Pit_Optimization_Model_2013.xlsx", DESIGN, "copper", "Mirren Flats", "Pit shell optimization results for the copper deposit across five metal price cases."),
   file("Mine_Schedule_Update_2018.xlsx", DESIGN, "iron ore", "Corvane Hill", "Updated life-of-mine schedule balancing ore blending targets across three iron ore pits."),
   file("Pit_Phase_Sequencing_2015.docx", DESIGN, "coal", "Tarn Basin", "Recommends a four-phase coal pit sequence to defer waste stripping during the first five years."),
-  file("Waste_Dump_Layout_2019.pdf", DESIGN, "copper", "Mirren Flats", "Lays out waste dump lifts and truck routes to shorten the average haul by 600 metres."),
+  file("Waste_Dump_Layout_2019.pdf", DESIGN, "copper", "Mirren Flats", "Lays out waste dump lifts and traffic routes to shorten the average travel distance by 600 metres."),
 
   // Geotechnical Engineering
   file("Pit_Slope_Stability_Study_2016.pdf", GEOTECH, "gold", "Corvane Hill", "Slope stability analysis for the gold pit, recommending a 42-degree overall angle on the north wall."),

@@ -8,37 +8,35 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="page">
+    <header class="app-header">
+      <p class="app-name">Mining Document Assistant</p>
       <p class="prototype-label">Prototype: simulated answers</p>
+    </header>
 
-      <header class="intro">
-        <h1>Ask the engineering library</h1>
-        <p>Ask a question in plain language to find the relevant reports across <span id="file-count"></span> sample mining engineering files.</p>
-      </header>
-
-      <form id="search-form" class="search" role="search">
-        <label for="question">Your question</label>
-        <div class="search-row">
-          <input id="question" type="text" autocomplete="off" placeholder="Can you find me the..." />
-          <button type="submit">Ask</button>
-        </div>
-        <p class="search-scope">Searches by <strong>category</strong>, <strong>year</strong> and <strong>company</strong>, as well as file names and contents.</p>
-      </form>
-
-      <section class="examples" aria-labelledby="examples-title">
-        <h2 id="examples-title">Try an example</h2>
-        <div class="example-list">
-          <button type="button" class="example">Can you find me the gold mining report from 2015 to 2017?</button>
-          <button type="button" class="example">Show me haul truck studies from 2016 to 2018</button>
-          <button type="button" class="example">Find the tailings engineering reports</button>
-          <button type="button" class="example">Show me the files from Harlow Ridge</button>
-          <button type="button" class="example">Our client wants to know which haul truck fleet can meet the production target at Tarn Basin.</button>
-        </div>
-      </section>
-
-      <ol id="progress" class="progress" aria-live="polite" hidden></ol>
-      <section id="results" class="results" aria-live="polite" hidden></section>
+    <main id="conversation" class="conversation">
+      <div id="thread" class="thread" role="log" aria-live="polite">
+        <section id="welcome" class="welcome">
+          <h1>Ask the engineering library</h1>
+          <p>Ask a question in plain language to find answers across <span id="file-count"></span> sample mining engineering files.</p>
+        </section>
+      </div>
     </main>
+
+    <footer class="composer">
+      <form id="search-form" class="composer-form" role="search">
+        <label for="question" class="visually-hidden">Your question</label>
+        <input id="question" type="text" autocomplete="off" placeholder="Ask a question about your files..." />
+        <button type="submit">Ask</button>
+      </form>
+    </footer>
+
+    <dialog id="document-viewer" class="viewer" aria-labelledby="viewer-title">
+      <header class="viewer-header">
+        <p class="viewer-label">Sample document: made-up content</p>
+        <button type="button" id="viewer-close" class="viewer-close">Close</button>
+      </header>
+      <div id="viewer-body" class="viewer-body"></div>
+    </dialog>
 
     <script type="module" src="app.js"></script>
   </body>

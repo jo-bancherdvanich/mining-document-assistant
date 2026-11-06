@@ -18,17 +18,18 @@ Success means someone watching the demo understands the concept: ask in plain la
 
 ## What people see
 
-1. **Start screen:** page title, a visible "Prototype: simulated answers" label, a search box and three clickable example questions:
-   - "Can you find me the gold mining report from 2015 to 2017?"
-   - "Show me haul truck studies from 2016 to 2018"
-   - "Find the tailings engineering reports"
-2. **Progress:** about 1.5 seconds of steps: "Searching documents", "Found relevant sources", "Writing answer". With reduced-motion turned on, the steps appear without animation.
-3. **Answer:** a heading such as "We found 15 relevant files", followed by a one-sentence summary naming the years and the topics covered.
-4. **Sources:** one card per file showing the file name, type icon (PDF, Word or Excel, each with its own color), category, year and a short passage explaining the match. The first card is marked "Best match".
+The page is an AI chat, similar in idea to NotebookLM: the conversation fills the page and the question box stays fixed at the bottom. A "Prototype: simulated answers" label is always visible in the header.
 
-If nothing matches, the page shows a short hint: "Try asking about a mining engineering topic, such as gold mine plans or haul trucks." This case is not featured in the example questions.
+1. **Start screen:** a short welcome message above an empty question box. There are no example questions.
+2. **Question:** the question appears as a chat message, and earlier questions and answers stay in the conversation. New questions are ignored until the current answer finishes.
+3. **Progress:** about 1.5 seconds of steps: "Searching documents", "Found relevant sources", "Writing answer". The steps disappear when the answer arrives. With reduced-motion turned on, they appear without animation.
+4. **AI answer:** an opening sentence such as "We found 11 relevant files. Here are the files from Harlow Ridge, covering...", or the written answer for a prepared client question.
+5. **Summary:** up to three points, using the passages from the top three files, each with a number matching its source.
+6. **Sources:** one numbered card per file showing the file name, type icon (PDF, Word or Excel), category, year, company and passage. The first card is marked "Best match".
 
-The layout works at desktop and phone widths, and the search box and example questions work by keyboard.
+If nothing matches, the reply is a short hint: "Try asking about a mining engineering topic, such as gold mine plans or haul trucks."
+
+The layout works at desktop and phone widths, and the question box works by keyboard.
 
 ## Sample library
 
@@ -61,6 +62,14 @@ The count and summary always come from the actual results. They are never hardco
 ## Company search
 
 Each file's `site` value is shown to users as its company. If a question contains the first word of a company's name, such as "Harlow" for Harlow Ridge, results are limited to that company. Any topic words or years in the question narrow the results further. The summary names the company.
+
+## Report writing
+
+A question containing both "write" and "report" produces a simulated draft report instead of a summary, using the same topic, company and year matching as a normal search. The report has a title, its scope, one key finding per matching file with a source number, a note saying it's a draft to check before sending to a client, and a working Copy report button. Findings use the files' passages, so they always match the sources.
+
+## Document view
+
+Clicking a file name opens a made-up document in a dialog, labeled "Sample document: made-up content". It shows the file's details, an overview using its passage, method and outcome text based on its category, and a table of review items. Real files can't be opened, downloaded or sent. Escape, the Close button or clicking outside closes it.
 
 ## Prepared client answers
 
