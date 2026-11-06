@@ -4,7 +4,12 @@ import { search, formatHeading } from "./search.js";
 const STEPS = ["Searching documents", "Found relevant sources", "Writing answer"];
 const STEP_DELAY_MS = 500;
 const NO_MATCH_HINT = "Try asking about a mining engineering topic, such as gold mine plans or haul trucks.";
-const TYPE_LABELS = { pdf: "PDF", docx: "Word", xlsx: "Excel" };
+const FILE_ICONS = {
+  pdf: { label: "PDF file", letter: "PDF", size: 13 },
+  docx: { label: "Word file", letter: "W", size: 20 },
+  xlsx: { label: "Excel file", letter: "X", size: 20 },
+};
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 const form = document.querySelector("#search-form");
 const input = document.querySelector("#question");
@@ -24,10 +29,63 @@ function element(tag, className, text) {
   return node;
 }
 
+function svgElement(tag, attributes) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, value);
+  return node;
+}
+
+function renderIcon(type) {
+  const { label, letter, size } = FILE_ICONS[type];
+  const icon = svgElement("svg", {
+    class: `type type-${type}`,
+    viewBox: "0 0 40 48",
+    role: "img",
+    "aria-label": label,
+  });
+  const text = svgElement("text", {
+    x: 20,
+    y: 37,
+    "text-anchor": "middle",
+    "font-size": size,
+    "font-weight": 700,
+    fill: "#ffffff",
+  });
+  text.textContent = letter;
+  icon.append(
+    svgElement("path", {
+      d: "M4 0h22l14 14v30a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4z",
+      fill: "currentColor",
+    }),
+    svgElement("path", {
+      d: "M26 0l14 14H30a4 4 0 0 1-4-4z",
+      fill: "#ffffff",
+      "fill-opacity": 0.5,
+    }),
+    text,
+  );
+  return icon;
+}
+
+function renderMeta(file) {
+  const meta = element("p", "card-meta");
+  const items = [
+    ["Category", file.category],
+    ["Year", file.year],
+    ["Company", file.site],
+  ];
+  for (const [label, value] of items) {
+    const item = element("span", "meta-item");
+    item.append(element("strong", "meta-label", `${label}: `), String(value));
+    meta.append(item);
+  }
+  return meta;
+}
+
 function renderCard(file, isBest) {
   const card = element("li", "card");
 
-  const badge = element("span", `type type-${file.type}`, TYPE_LABELS[file.type]);
+  const badge = renderIcon(file.type);
   const body = element("div", "card-body");
   const title = element("div", "card-title");
   title.append(element("span", "file-name", file.name));
@@ -35,7 +93,7 @@ function renderCard(file, isBest) {
 
   body.append(
     title,
-    element("p", "card-meta", `${file.category} · ${file.year} · ${file.site}`),
+    renderMeta(file),
     element("p", "card-passage", file.passage),
   );
 
