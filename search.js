@@ -1,5 +1,7 @@
 // Simulated retrieval: scores files by matching question words. No AI is involved.
 
+import { PREPARED_ANSWERS } from "./data.js";
+
 const normalize = (word) => word.replace(/s$/, "");
 
 const toWords = (text) =>
@@ -68,7 +70,20 @@ function buildSummary(files, years) {
   return `${subject} ${verb} from ${range} and ${cover} ${categories}.`;
 }
 
+function findPreparedAnswer(question, files) {
+  const words = new Set(toWords(question));
+  for (const { keywords, answer, sources } of PREPARED_ANSWERS) {
+    if (!toWords(keywords.join(" ")).every((word) => words.has(word))) continue;
+    const sourceFiles = sources.map((name) => files.find((file) => file.name === name));
+    if (sourceFiles.every(Boolean)) return { answer, files: sourceFiles, summary: "" };
+  }
+  return null;
+}
+
 export function search(question, files) {
+  const prepared = findPreparedAnswer(question, files);
+  if (prepared) return prepared;
+
   const years = parseYears(question);
   const topics = parseTopics(question);
   if (!years && topics.length === 0) return { files: [], summary: "" };

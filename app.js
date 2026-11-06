@@ -43,7 +43,7 @@ function renderCard(file, isBest) {
   return card;
 }
 
-function renderResults({ files, summary }) {
+function renderResults({ answer, files, summary }) {
   results.replaceChildren();
 
   if (files.length === 0) {
@@ -51,11 +51,19 @@ function renderResults({ files, summary }) {
   } else {
     const list = element("ol", "cards");
     list.append(...files.map((file, index) => renderCard(file, index === 0)));
-    results.append(
-      element("h2", "answer-heading", formatHeading(files.length)),
-      element("p", "answer-summary", summary),
-      list,
-    );
+    if (answer) {
+      results.append(
+        element("h2", "answer-heading", "Answer"),
+        element("p", "answer-text", answer),
+        element("h3", "source-heading", files.length === 1 ? "Source" : "Sources"),
+      );
+    } else {
+      results.append(
+        element("h2", "answer-heading", formatHeading(files.length)),
+        element("p", "answer-summary", summary),
+      );
+    }
+    results.append(list);
   }
 
   results.hidden = false;

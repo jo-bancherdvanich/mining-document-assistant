@@ -15,6 +15,17 @@ export const CATEGORIES = [
 
 const [PLAN, HAUL, DESIGN, GEOTECH, BLAST, PLANT, TAILINGS, EQUIPMENT] = CATEGORIES;
 
+// Answers written in advance for the demo. One is used when a question contains
+// all of its key words.
+export const PREPARED_ANSWERS = [
+  {
+    keywords: ["which", "fleet", "tarn"],
+    answer:
+      "A fleet of 14 trucks with a 136-tonne payload is the recommended option for Tarn Basin. This comes from the 2015 fleet sizing model for the site's gold operation.",
+    sources: ["Haul_Truck_Fleet_Sizing_2015.xlsx"],
+  },
+];
+
 // The file type and year come from the file name, so they can't disagree with it.
 const file = (name, category, commodity, site, passage) => ({
   name,
@@ -36,7 +47,7 @@ export const FILES = [
   file("Gold_Mining_Plan_Extension_2019.pdf", PLAN, "gold", "Harlow Ridge", "Evaluates a four-year gold mining extension through a pit cutback on the western wall."),
 
   // Haul Truck
-  file("Haul_Truck_Fleet_Sizing_2015.xlsx", HAUL, "gold", "Tarn Basin", "Fleet sizing model for the gold operation at Tarn Basin, recommending 14 trucks of 136-tonne payload."),
+  file("Haul_Truck_Fleet_Sizing_2015.xlsx", HAUL, "gold", "Tarn Basin", "Fleet sizing model for the gold operation at Tarn Basin, recommending 14 trucks of 136-tonne payload to meet the production target."),
   file("Haul_Road_Design_Review_2016.docx", HAUL, "gold", "Harlow Ridge", "Reviews haul road width, grade and drainage at the Harlow Ridge gold mine against a 10 percent maximum ramp grade."),
   file("Haul_Truck_Cycle_Time_Study_2017.pdf", HAUL, "gold", "Corvane Hill", "Measures truck cycle times at the Corvane Hill gold pit and finds queuing at the shovel adds 2.1 minutes per load."),
   file("Haul_Truck_Payload_Analysis_2018.xlsx", HAUL, "copper", "Mirren Flats", "Analyzes payload scale data from the copper fleet and identifies 8 percent of loads above the target range."),

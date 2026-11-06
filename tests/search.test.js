@@ -38,6 +38,37 @@ test("time-only questions in natural wording return the whole range", () => {
   );
 });
 
+const CLIENT = "Our client wants to know which haul truck fleet can meet the production target at Tarn Basin.";
+
+test("the client question gives a written answer with its source", () => {
+  const { answer, files } = search(CLIENT, FILES);
+  assert.match(answer, /14 trucks/);
+  assert.match(answer, /136-tonne/);
+  assert.deepEqual(files.map((f) => f.name), ["Haul_Truck_Fleet_Sizing_2015.xlsx"]);
+});
+
+test("the client answer's source passage supports the answer", () => {
+  const [source] = search(CLIENT, FILES).files;
+  assert.match(source.passage, /14 trucks/);
+  assert.match(source.passage, /136-tonne/);
+  assert.match(source.passage, /Tarn Basin/);
+});
+
+test("the client question ignores capitals and punctuation", () => {
+  assert.deepEqual(search(CLIENT.toUpperCase(), FILES), search(CLIENT, FILES));
+});
+
+test("related questions without the prepared key words stay normal searches", () => {
+  for (const q of [MAIN, "Show me the fleet files for Tarn Basin", "Which haul truck fleet studies do we have?"]) {
+    assert.equal(search(q, FILES).answer, undefined, q);
+  }
+});
+
+test("a prepared answer is skipped if its source file is missing", () => {
+  const result = search(CLIENT, FILES.filter((f) => f.name !== "Haul_Truck_Fleet_Sizing_2015.xlsx"));
+  assert.equal(result.answer, undefined);
+});
+
 test("each example question returns at least one file", () => {
   for (const q of [MAIN, "Show me haul truck studies from 2016 to 2018", "Find the tailings engineering reports"]) {
     assert.ok(search(q, FILES).files.length > 0, q);
