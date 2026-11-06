@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mining Document Assistant</title>
+    <meta name="description" content="A simulated prototype of a document assistant for mining engineering reports." />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <p class="prototype-label">Prototype: simulated answers</p>
+
+      <header class="intro">
+        <h1>Ask the engineering library</h1>
+        <p>Ask a question in plain language to find the relevant reports across <span id="file-count"></span> sample mining engineering files.</p>
+      </header>
+
+      <form id="search-form" class="search" role="search">
+        <label for="question">Your question</label>
+        <div class="search-row">
+          <input id="question" type="text" autocomplete="off" placeholder="Can you find me the..." />
+          <button type="submit">Ask</button>
+        </div>
+      </form>
+
+      <section class="examples" aria-labelledby="examples-title">
+        <h2 id="examples-title">Try an example</h2>
+        <div class="example-list">
+          <button type="button" class="example">Can you find me the gold mining report from 2015 to 2017?</button>
+          <button type="button" class="example">Show me haul truck studies from 2016 to 2018</button>
+          <button type="button" class="example">Find the tailings engineering reports</button>
+        </div>
+      </section>
+
+      <ol id="progress" class="progress" aria-live="polite" hidden></ol>
+      <section id="results" class="results" aria-live="polite" hidden></section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
