@@ -69,6 +69,42 @@ test("a prepared answer is skipped if its source file is missing", () => {
   assert.equal(result.answer, undefined);
 });
 
+const fromCompany = (site) => FILES.filter((f) => f.site === site);
+
+test("naming a company returns all of that company's files", () => {
+  const { files, summary } = search("Show me the files from Harlow Ridge", FILES);
+  assert.equal(files.length, fromCompany("Harlow Ridge").length);
+  assert.ok(files.every((f) => f.site === "Harlow Ridge"));
+  assert.match(summary, /Harlow Ridge/);
+});
+
+test("the word company and the short name both work", () => {
+  const expected = fromCompany("Harlow Ridge").length;
+  assert.equal(search("Find reports for the company Harlow Ridge", FILES).files.length, expected);
+  assert.equal(search("Show me the Harlow files", FILES).files.length, expected);
+});
+
+test("a company narrows a topic search", () => {
+  const { files } = search("gold reports for Harlow Ridge", FILES);
+  const expected = fromCompany("Harlow Ridge").filter((f) => f.commodity === "gold");
+  assert.equal(files.length, expected.length);
+  assert.ok(files.every((f) => f.site === "Harlow Ridge" && f.commodity === "gold"));
+});
+
+test("a company narrows a year range", () => {
+  const { files, summary } = search("Harlow Ridge files from 2015 to 2017", FILES);
+  const expected = fromCompany("Harlow Ridge").filter((f) => f.year >= 2015 && f.year <= 2017);
+  assert.equal(files.length, expected.length);
+  assert.match(summary, /Harlow Ridge/);
+  assert.match(summary, /2015 to 2017/);
+});
+
+test("small words like 'at' do not match file text", () => {
+  const { files } = search("tailings at Mirren Flats", FILES);
+  assert.ok(files.length > 0);
+  assert.ok(files.every((f) => f.site === "Mirren Flats" && f.category === "Tailings Engineering"));
+});
+
 test("each example question returns at least one file", () => {
   for (const q of [MAIN, "Show me haul truck studies from 2016 to 2018", "Find the tailings engineering reports"]) {
     assert.ok(search(q, FILES).files.length > 0, q);

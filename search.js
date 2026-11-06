@@ -14,8 +14,8 @@ const toWords = (text) =>
 
 const IGNORED_WORDS = new Set(
   toWords(
-    "a about all an and any are between can could do does exist find for from get give has have i in is it looking me my need of on our please show that the there this to us want was we were what whats which with would written you " +
-      "report reports file files study studies mining mine engineering",
+    "a about all an and any are as at between by can could do does exist find for from get give has have i in is it looking me my need of on our please show that the there this to us want was we were what whats which with would written you " +
+      "report reports file files study studies mining mine engineering company",
   ),
 );
 
@@ -59,15 +59,27 @@ function topCategories(files) {
     .map(([category]) => category);
 }
 
-function buildSummary(files, years) {
+function buildSummary(files, years, company) {
   if (files.length === 0) return "";
   const subject = files.length === 1 ? "This file" : "These files";
-  const categories = joinList(topCategories(files));
-  if (!years) return `${subject} cover${files.length === 1 ? "s" : ""} ${categories}.`;
-  const range = years.from === years.to ? `${years.from}` : `${years.from} to ${years.to}`;
   const verb = files.length === 1 ? "is" : "are";
   const cover = files.length === 1 ? "covers" : "cover";
-  return `${subject} ${verb} from ${range} and ${cover} ${categories}.`;
+  const categories = joinList(topCategories(files));
+  const range = years && (years.from === years.to ? `${years.from}` : `${years.from} to ${years.to}`);
+
+  let origin = "";
+  if (company && range) origin = `${verb} from ${company}, dated ${range}, and `;
+  else if (company) origin = `${verb} from ${company} and `;
+  else if (range) origin = `${verb} from ${range} and `;
+
+  return `${subject} ${origin}${cover} ${categories}.`;
+}
+
+// A company is recognized by the first word of its name, such as "Harlow" for Harlow Ridge.
+function findCompany(question, files) {
+  const words = new Set(toWords(question));
+  const companies = new Set(files.map((file) => file.site));
+  return [...companies].find((company) => words.has(toWords(company)[0])) ?? null;
 }
 
 function findPreparedAnswer(question, files) {
@@ -85,14 +97,18 @@ export function search(question, files) {
   if (prepared) return prepared;
 
   const years = parseYears(question);
-  const topics = parseTopics(question);
-  if (!years && topics.length === 0) return { files: [], summary: "" };
+  const company = findCompany(question, files);
+  const companyWords = new Set(company ? toWords(company) : []);
+  const topics = parseTopics(question).filter((word) => !companyWords.has(word));
+  if (!years && !company && topics.length === 0) return { files: [], summary: "" };
 
-  const inRange = years
-    ? files.filter((file) => file.year >= years.from && file.year <= years.to)
-    : files;
+  const inScope = files.filter(
+    (file) =>
+      (!years || (file.year >= years.from && file.year <= years.to)) &&
+      (!company || file.site === company),
+  );
 
-  const matches = inRange
+  const matches = inScope
     .map((file) => ({ file, score: scoreFile(file, topics) }))
     .filter(({ score }) => topics.length === 0 || score > 0)
     .sort(
@@ -103,7 +119,7 @@ export function search(question, files) {
     )
     .map(({ file }) => file);
 
-  return { files: matches, summary: buildSummary(matches, years) };
+  return { files: matches, summary: buildSummary(matches, years, company) };
 }
 
 export function formatHeading(count) {

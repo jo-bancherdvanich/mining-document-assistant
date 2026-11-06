@@ -58,6 +58,10 @@ Search is a pure function, `search(question, files)`, that returns `{ files, sum
 
 The count and summary always come from the actual results. They are never hardcoded.
 
+## Company search
+
+Each file's `site` value is shown to users as its company. If a question contains the first word of a company's name, such as "Harlow" for Harlow Ridge, results are limited to that company. Any topic words or years in the question narrow the results further. The summary names the company.
+
 ## Prepared client answers
 
 Some questions get a written answer in place of a file count. These answers are written in advance in `data.js`. Each one lists its key words and source files, and it is used when the question contains all of its key words and all of its source files exist. Other questions use the normal search.
